@@ -1,0 +1,23 @@
+Competition#1: Sentiment Prediction
+The goal of this competition is to predict if a movie review is positive or negative. 
+[Competition website][1]
+Note: When you submit your solution, you must add your name and student id to the brief description section. 
+This section is below the solution submission section. If you don't add your information, your submission is invalid.
+Also, this competition will be based on the dataset: http://ai.stanford.edu/~amaas/data/sentiment/, 
+however you may not use any data from this dataset or any other dataset, only the data available on the competition website above.
+
+[1]: https://urldefense.proofpoint.com/v2/url?u=https-3A__inclass.kaggle.com_c_sentiment-2Dclassification-2Don-2Dlarge-2Dmovie-2Dreview&d=BQMFaQ&c=lqHimbpwJeF7VTDNof4ddnO1LTp7jTaMHJ2UAxZwrfY&r=Tah_FI7n9eYpfbEhgsYn5FiZPGkUHR-LIPaaIl1sFJI&m=l9VD7bpGEWSd5X1Li2BhEiGrZOPAxUKr1A9MBtqEU98&s=NIy7mRJEosSNMjMWpQ580oH120vxRVyzn9bQfo2eurQ&e=
+
+List of team members/emails
+
+• 2 page description:
+
+– Goal: what is the problem?
+
+– What has already been tried in the literature?
+
+Research published papers
+
+– Approach: a rough initial idea
+
+– Rough timeline with team member roles
