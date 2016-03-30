@@ -19,7 +19,7 @@ for i = 3:size(trainPos)(1,1);
 end
 
 for i = 3:size(trainNeg)(1,1);
-  fileID = fopen(strcat('train/neg/', trainPos(i).name));
+  fileID = fopen(strcat('train/neg/', trainNeg(i).name));
   dataNeg((i - 2),1) = fgetl(fileID);
   fclose(fileID);
 end
