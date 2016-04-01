@@ -30,7 +30,7 @@ for review in dataPos:
                 else:
                         wordsPos[t] = 1
                         
-fOut = open('pos.dat', 'w', encoding='utf-8')
+fOut = open('pos_data_raw', 'w', encoding='utf-8')
 
 for k, v in wordsPos.items():
         fOut.write(k + " " + str(v) + '\n')
