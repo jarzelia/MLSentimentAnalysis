@@ -30,8 +30,24 @@ for review in dataPos:
                 else:
                         wordsPos[t] = 1
                         
-fOut = open('pos_data_raw', 'w', encoding='utf-8')
+fOut = open('pos_data', 'w', encoding='utf-8')
 
 for k, v in wordsPos.items():
         fOut.write(k + " " + str(v) + '\n')
 
+
+
+for review in dataNeg:
+        tokens = re.split('[^a-zA-Z0-9_]', review)
+        
+        for t in tokens:
+                if t in wordsNeg:
+                        wordsNeg[t] = wordsNeg[t] + 1
+                else:
+                        wordsNeg[t] = 1
+
+fOut2 = open('neg_data', 'w', encoding='utf-8')
+
+for k, v in wordsNeg.items():
+        fOut2.write(k + " " + str(v) + '\n')
+        
