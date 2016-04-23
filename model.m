@@ -6,58 +6,49 @@ clear ; close all; clc
 path_theData = 'dataio/theData.dat';
 
 if(exist(path_theData))
-   [test_class, test_tf, test_words] = textread(path_theData, '%d %d %s');
+   [data_class, data_tf, data_words] = textread(path_theData, '%d %d %s');
 else
 	% Error: DNE
    disp(['Could not open ' path_theData '. File does not exist.']);
 end
 
-% Some random test
-thisFile = fopen('test/0.txt', 'r');
-thatFile = fopen('test/1.txt', 'r');
+path_features = 'dataio/trainingFeatures.dat';
+if (exist(path_features))
+	data = load(path_features);
+else
+	% Error: DNE
+   disp(['Could not open ' path_theData '. File does not exist.']);
 
-% Removing nonalphanumerics
-pattern = '[^a-zA-Z\d\s:]';
-A = fileread('test/1.txt');
-A = lower(A);
-A = regexprep(A, pattern, '');
-
-tokens = strsplit(A);
-tokens_size = size(tokens)(1,2);
+% pattern = '[^a-zA-Z\d\s:]';
+% X = zeros(12500, 5001);
 
 
-% m - number of examples
-% n - number of features
+% trainPos = dir('train/pos');
+% trainPosSize = size(trainPos)(1,1);
 
-X = zeros(10999, 1000);
-for j = 1:tokens_size
-	idx = find ( strcmp(test_words, tokens{j}) );
+% fprintf('\nComputing Features...\n\n');
 
-	if !isempty(idx)			% Word Exists in Training Set
-		disp('Found!');
+% for i = 3:trainPosSize
+% 	% Progress Check
+% 	if (mod(i, 100) == 0)
+% 		percent = i / trainPosSize;
+% 		disp(strcat(num2str(percent), ' % Done' ));
+% 		fflush(stdout);
+% 	end
 
-		if size(idx)(1,1) == 2
-			X(1, idx(1)) += 1;
-		end
+% 	review = fileread(strcat('train/pos/', trainPos(i).name));
+% 	review = lower(review);
+% 	review = regexprep(review, pattern, '');
+% 	tokens = strsplit(review);
+% 	tokens_size = size(tokens)(1,2);
+	
 
-	else
-		disp('Not Found!');
-	end
-end
+% 	for j = 1:tokens_size
+% 		X(i, end) = 1;
+% 		idx = find ( strcmp(data_words, tokens{j}) );
+% 		if !isempty(idx)
+% 			X(i, idx) += 1;
+% 		end
+% 	end
 
-%C = textscan(thisFile, '%s');
-%C = textscan(thatFile, '%s');
-
-%A = fscanf(thatFile, '%s');
-
-
-
-%someLine = fgetl(someFile);
-%while ischar(someLine)
-%	disp(someLine)
-%	someLine = fgetl(someFile);
-%end
-%disp(regexp(test_words, 'good', 'match'));
-
-fclose(thisFile);
-fclose(thatFile);
+% end
