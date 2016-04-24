@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Sat Apr 23 13:00:17 2016
 
-@author: Pat
-"""
 import numpy as np
 
 
@@ -59,3 +55,23 @@ def computeGrad(theta, X, y, l):
     
             
     return grad
+    
+def predict(theta, X):
+    # m - Number of training examples
+    # n - Number of features
+    m, n = X.shape
+    
+    # p - Holds labels
+    p = np.zeros(shape=(m, 1))
+    
+    # h - Hypothesis function
+    h = sigmoid(np.dot(X, theta))
+    
+    # Iterate over h
+    for i in range (0, h.shape[0]):
+        if h[i] >= 0.5:
+            p[i, 0] = 1;
+        
+    return p
+            
+    
