@@ -10,10 +10,13 @@ from lrFunctions import sigmoid
 def predict(theta, X):
     m, n = X.shape
     
-    p = np.zeros(shape = (m, 1))
+    p = np.zeros(shape=(m, 1))
+    h = sigmoid(np.dot(X, theta))
     
-    for i in range (1, m):
-        if sigmoid(np.dot(X[i], theta)) > 0.5:
-            p[i, 0] = 1
+    for i in range (0, h.shape[0]):
+        if h[i] >= 0.5:
+            p[i, 0] = 1;
+        
+    return p
             
     

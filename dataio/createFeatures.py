@@ -8,14 +8,11 @@ import pandas as pd
 import numpy as np
 import os
 import re
+import math
 
-dataPos = []
-dataNeg = []
-dataTest = []
-
-words = []
-numOfFeatures = 5000
-tfidfFlag = False
+dataPos = []        # Holds train/pos/ reviews
+dataNeg = []        # Holds train/neg/ reviews
+dataTest = []       # Holds test/ reviews
 
 path = "../train/pos/"
 path2 = "../train/neg/"
@@ -24,15 +21,12 @@ path3 = "../test/"
 test_id = list(range(11000))
 
 
-print ("Reading files from directories...")
+print ("Reading files from directories...", end='')
 for f in os.listdir(path):
         filePath = os.path.join(path, f)
         with open(filePath, 'r', encoding ='utf-8') as theFile:
             dataPos.append(theFile.read().lower())
             
-        #theFile = open(filePath, 'r', encoding='utf-8')
-        #dataPos.append(theFile.read().lower())
-        #theFile.close()
 for f in os.listdir(path2):
         filePath = os.path.join(path2, f)
         with open(filePath, 'r', encoding ='utf-8') as theFile:
@@ -45,7 +39,7 @@ for f in os.listdir(path3):
 print ("Done!\n")
 
 print ("Cleaning reviews...")
-print ("Cleaning positive training set...")
+print ("Cleaning positive training set...", end='')
 for i in range(len(dataPos)):      
         review = dataPos[i]
            
@@ -68,8 +62,8 @@ for i in range(len(dataPos)):
         review = ( " ".join(tokens))
 
         dataPos[i] = review
-
-print ("Cleaning negative training set...")
+print ("Done!")
+print ("Cleaning negative training set...", end='')
 for i in range(len(dataNeg)):
         review = dataNeg[i]
            
@@ -92,11 +86,9 @@ for i in range(len(dataNeg)):
         review = ( " ".join(tokens))
         
         dataNeg[i] = review
-
-print ("Cleaning test set...")
+print ("Done!")
+print ("Cleaning test set...", end='')
 for i in range(len(dataTest)):
-        if( (i+1)%1000 == 0 ):
-            print( "Review %d of %d (Test)\n" % ( i+1, len(dataTest) ) )
         review = dataTest[i]
            
         # Remove HTML tags
@@ -120,6 +112,7 @@ for i in range(len(dataTest)):
         dataTest[i] = review
 print ("Done!\n")
 
+# Append dataPos and dataNeg together
 allReviews = []
 for review in dataPos:
     allReviews.append(review)
@@ -136,15 +129,19 @@ for i in range(25000):
         train_labels.append(1)
 
 
-print ("Creating bag of words ... \n")
+print ("Creating bag of words ...", end='')
 from sklearn.feature_extraction.text import CountVectorizer
 
 vectorizer = CountVectorizer(analyzer = "word", tokenizer = None, preprocessor = None, stop_words = None, max_features = 5000)
 
 train_data_features = vectorizer.fit_transform(allReviews)
 train_data_features = train_data_features.toarray()
+
+print ("Done!\n")
+
+# ================= Random Forest Test (sklearn) =================
 '''
-print ("Training the random forest...\n")
+print ("Training the random forest...")
 from sklearn.ensemble import RandomForestClassifier
 
 # Initialize a Random Forest classifier with 100 trees
@@ -159,37 +156,37 @@ test_data_features = test_data_features.toarray()
 result = forest.predict(test_data_features)
 
 # Writing to sample.csv
-'''
-
-'''
 output = pd.DataFrame( data = {"id": test_id, "labels":result})
 output.to_csv("sample.csv", index=False)
 '''
-print ("Training logistic regression...\n")
 
+# ================= Logistic Regression Test (sklearn) =================
+'''
+print ("Training Logistic Regression...")
 
-# Initialize a Logistic Regression classifier
+# Initialize a Logistic Regression classifier from sklearn
 from sklearn.linear_model import LogisticRegression
 
 # Fit LR to training set
 b = LogisticRegression()
 b = b.fit(train_data_features, train_labels)
 
+# Predict labels on test set
 test_data_features = vectorizer.transform(dataTest)
 test_data_features = test_data_features.toarray()
 result = b.predict(test_data_features)
 
-# Writing to sample_lr.csv
+# Writing to sample.csv
+print("Writing to sample.csv")
 output = pd.DataFrame( data = {"id": test_id, "labels":result})
-output.to_csv("sample_lr.csv", index=False)
-
+output.to_csv("sample.csv", index=False)
 
 # Predict Training Set accuracy...
 train_data_features = vectorizer.fit_transform(allReviews)
 train_data_features = train_data_features.toarray()
 result = b.predict(train_data_features)
 
-# Print accuracy
+# Print accuracy for sklearn Logistic Regression
 accuracy = 0
 for i in range(25000):
     if result[i] == train_labels[i]:
@@ -197,10 +194,10 @@ for i in range(25000):
 
 accuracy = ( accuracy / 25000 ) * 100
 
-print ("Accuracy: " + str(accuracy) + " %")
-
-
-# Testing our model
+print ("Training Set Accuracy: " + str(accuracy) + " %\n")
+'''
+# ================= Logistic Regression Test (ours) =================
+print ("Training Logistic Regression...")
 
 # Set n - number of features in training set
 n = train_data_features.shape[1]
@@ -210,13 +207,42 @@ init_theta = np.zeros((n + 1, 1))
 # Append intercept term to our training features
 X_1 = np.append( np.ones((train_data_features.shape[0], 1)), train_data_features, axis=1)
 
-cost = computeCost(init_theta, X_1, train_labels)
-grad = computeGrad(init_theta, X_1, train_labels)
+# Computing Cost
+#cost = computeCost(init_theta, X_1, train_labels, 1)
+#print ('Cost at initial theta (zeros): ' + str(cost))
 
-print ('Cost at initial theta (zeros):' + str(cost) + '\n')
-print ('Gradient at initial theta (zeros):' + str(grad) + '\n')
-opt_theta = optimize.fmin_bfgs(cost, init_theta, fprime = grad, args=(X_1, train_labels))
+# Computing Gradient
+#grad = computeGrad(init_theta, X_1, train_labels)
+#print ('Gradient at initial theta (zeros):' + str(grad))
 
-p = predict(opt_theta, train_data_features)
+# Optimizing parameters theta
+opt_theta = optimize.fmin_l_bfgs_b(computeCost, init_theta, fprime=computeGrad, args=(X_1, train_labels, 1), disp=1, maxiter=400)
 
-print(p)
+# Predicting the training set
+p = predict(opt_theta[0], X_1)
+
+accuracy = 0
+for i in range(25000):
+    if p[i] == train_labels[i]:
+        accuracy = accuracy + 1
+accuracy = (accuracy / 25000) * 100
+
+print ("Training Set Accuracy: " + str(accuracy) + " %\n")
+
+# Predict labels on test set
+test_data_features = vectorizer.transform(dataTest)
+test_data_features = test_data_features.toarray()
+
+X_1_test = np.append( np.ones((test_data_features.shape[0], 1)), test_data_features, axis=1)
+result = predict(opt_theta[0], X_1_test)
+
+result = result.tolist()
+
+# Convert to something we can write to .csv
+for i, val in enumerate(result):
+    result[i] = math.floor(val[0])
+    
+
+# Writing to sample2.csv
+output = pd.DataFrame( data = {"id": test_id, "labels":result})
+output.to_csv("sample.csv", index=False)
