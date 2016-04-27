@@ -12,7 +12,7 @@ def computeCost(theta, X, y, l):
     m = X.shape[0]
     
     # p - Regularization parameter, p_theta - theta indexed from 1
-    p_theta = theta[1:np.size(theta):1]
+    p_theta = theta[2:np.size(theta):1]
     p_theta = np.insert(p_theta, 0, 0, axis=0)
     p = (l/(2*m)) * (np.dot(np.transpose(p_theta), p_theta))
     
