@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np
 import math, os
 
+validationFlag = False
 posReviews = []        # Holds train/pos/ reviews
 negReviews = []        # Holds train/neg/ reviews
 testReviews = []       # Holds test/ reviews
@@ -40,125 +41,85 @@ test_id = list(range(len( os.listdir(testPath) )))
 
 # Create labels (class) for training set
 train_labels = []
-for i in range(m_train):
-    if i > 12500:
+for i in range(len(allReviews)):
+    if i > math.floor(len(allReviews)/2):
         train_labels.append(0)
     else:
         train_labels.append(1)
 
 
 print ("Creating bag of words...", end='\t\t')
-#from sklearn.feature_extraction.text import CountVectorizer
+
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-#vectorizer = CountVectorizer(analyzer = "word", tokenizer = None, preprocessor = None, stop_words = None, max_features = 5000)
-vectorizer = TfidfVectorizer(analyzer = "word", tokenizer = None, ngram_range=(1, 2), preprocessor = None, stop_words = None, max_features = 5000)
 
-train_data_features = vectorizer.fit_transform(allReviews)
-train_data_features = train_data_features.toarray()
+vectorizer = TfidfVectorizer(analyzer = "word", tokenizer = None, ngram_range=(1, 1), preprocessor = None, stop_words = None, max_features = 5000)
+
+X_train = vectorizer.fit_transform(allReviews)
+X_train = X_train.toarray()
+
+# Split the training set if validationFlag == true
+if validationFlag == True:
+    from sklearn.cross_validation import train_test_split
+    X_train, X_validation, train_labels, validation_labels = train_test_split(X_train, train_labels, test_size=0.2, random_state=0)
+
 
 print ("Done!\n")
-
-# ================= Random Forest Test (sklearn) =================
-'''
-print ("Training the random forest...")
-from sklearn.ensemble import RandomForestClassifier
-
-# Initialize a Random Forest classifier with 100 trees
-forest = RandomForestClassifier(n_estimators = 100) 
-
-# Fit forest to training set
-forest = forest.fit( train_data_features, train_labels)
-
-test_data_features = vectorizer.transform(testReviews)
-test_data_features = test_data_features.toarray()
-
-result = forest.predict(test_data_features)
-
-# Writing to sample.csv
-output = pd.DataFrame( data = {"id": test_id, "labels":result})
-output.to_csv("sample.csv", index=False)
-'''
-
-# ================= Logistic Regression Test (sklearn) =================
-'''
-print ("Training Logistic Regression...")
-
-# Initialize a Logistic Regression classifier from sklearn
-from sklearn.linear_model import LogisticRegression
-
-# Fit LR to training set
-b = LogisticRegression()
-b = b.fit(train_data_features, train_labels)
-
-# Predict labels on test set
-test_data_features = vectorizer.transform(testReviews)
-test_data_features = test_data_features.toarray()
-result = b.predict(test_data_features)
-
-# Writing to sample.csv
-print("Writing to sample.csv")
-output = pd.DataFrame( data = {"id": test_id, "labels":result})
-output.to_csv("sample.csv", index=False)
-
-# Predict Training Set accuracy...
-train_data_features = vectorizer.fit_transform(allReviews)
-train_data_features = train_data_features.toarray()
-result = b.predict(train_data_features)
-
-# Print accuracy for sklearn Logistic Regression
-accuracy = 0
-for i in range(25000):
-    if result[i] == train_labels[i]:
-        accuracy = accuracy + 1
-
-accuracy = ( accuracy / 25000 ) * 100
-
-print ("Training Set Accuracy: " + str(accuracy) + " %\n")
-'''
 
 # ================= Logistic Regression Test (ours) =================
 print ("Training Logistic Regression...", end='\t\t')
 
 # Set n - number of features in training set
-n = train_data_features.shape[1]
+n = X_train.shape[1]
 
 # Initializing fitting parameters
 init_theta = np.zeros((n + 1, 1))
 
 # Append intercept term to our training features
-X_1 = np.append( np.ones((train_data_features.shape[0], 1)), train_data_features, axis=1)
+X_train_1 = np.append( np.ones((X_train.shape[0], 1)), X_train, axis=1)
 
 
 # Check initial Cost & Gradient
 # Computing Cost
-#cost = computeCost(init_theta, X_1, train_labels, 1)
+#cost = computeCost(init_theta, X_train_1, train_labels, 1)
 #print ('Cost at initial theta (zeros): ' + str(cost))
 
 # Computing Gradient
-#grad = computeGrad(init_theta, X_1, train_labels)
+#grad = computeGrad(init_theta, X_train_1, train_labels)
 #print ('Gradient at initial theta (zeros):' + str(grad))
 
 # Optimizing fitting parameters
-opt_theta = optimize.fmin_l_bfgs_b(computeCost, init_theta, fprime=computeGrad, args=(X_1, train_labels, 1), disp=1, maxiter=400)
+lmbda = 1
+opt_theta = optimize.minimize(computeCost, init_theta, args=(X_1, train_labels, lmbda), method='BFGS', jac=computeGrad )
 print ("Done!")
 
 # Predicting the training set
-p = predict(opt_theta[0], X_1)
+p = predict(opt_theta[0], X_train_1)
 
 accuracy = 0
-for i in range(25000):
+for i in range(len(train_labels)):
     if p[i] == train_labels[i]:
         accuracy = accuracy + 1
-accuracy = (accuracy / 25000) * 100
+accuracy = (accuracy / len(train_labels)) * 100
+print ("Training Set Accuracy:\t\t\t" + str(accuracy) + "%")
 
-print ("Training Set Accuracy: " + str(accuracy) + " %")
+# Predicting the validation set (if validationFlag == true)
+if validationFlag == True:
+    X_1 = np.append( np.ones((X_validation.shape[0], 1)), X_validation, axis=1)
+    p = predict(opt_theta.x, X_1)
+    
+    accuracy = 0
+    for i in range(len(validation_labels)):
+        if p[i] == validation_labels[i]:
+            accuracy = accuracy + 1
+    accuracy = (accuracy / len(validation_labels)) * 100
+    print ("Validation Set Accuracy:\t\t" + str(accuracy) + "%")
 
 # Predict labels on test set
-test_data_features = vectorizer.transform(testReviews)
-test_data_features = test_data_features.toarray()
+X_test = vectorizer.transform(testReviews)
+X_test = X_test.toarray()
 
-X_1_test = np.append( np.ones((test_data_features.shape[0], 1)), test_data_features, axis=1)
+X_1_test = np.append( np.ones((X_test.shape[0], 1)), X_test, axis=1)
 result = predict(opt_theta[0], X_1_test)
 
 result = result.tolist()
