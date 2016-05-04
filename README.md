@@ -2,8 +2,10 @@
 
 ###Instructions:
 ```
+// Install libraries
 sudo pip install ... 
 
+// Run from lrMain.py
 python lrMain.py
 ```
 ###Libraries:
