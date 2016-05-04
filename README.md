@@ -12,4 +12,4 @@ sudo pip install ...
 python lrMain.py
 ```
 ###Libraries:
-bs4, numpy, scipy, pandas, sklearn
+bs4, numpy, scipy, pandas, scikit-learn
